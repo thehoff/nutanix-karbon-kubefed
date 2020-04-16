@@ -1,0 +1,8 @@
+**/*.tfvars
+**/terraform.tfstate*
+**/*.log
+**/.terraform
+**/*.info
+**/.DS_Store
+**/terraform/
+**/images/*.drawio

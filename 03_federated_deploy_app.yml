@@ -1,0 +1,86 @@
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: k8s-demo-app
+  namespace: federated-app
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        run: k8s-demo-app
+    spec:
+      ports:
+      - name: http
+        port: 8080
+        protocol: TCP
+        targetPort: 80
+      selector:
+        run: k8s-demo-app
+      type: ClusterIP
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  name: k8s-demo-app
+  namespace: federated-app
+spec:
+  overrides:
+    - clusterName: yst-k8s-kubefed-m1-context
+      clusterOverrides:
+        - path: "/spec/template/spec/containers/0/env"
+          op: "replace"
+          value:
+            - name: DATACENTER
+              value: "DC1" 
+    - clusterName: yst-k8s-kubefed-m2-context
+      clusterOverrides:
+        - path: "/spec/template/spec/containers/0/env"
+          op: "replace"
+          value:
+            - name: DATACENTER
+              value: "DC2" 
+  placement:
+    clusters:
+      - name: yst-k8s-kubefed-m1-context
+      - name: yst-k8s-kubefed-m2-context
+  template:
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: k8s-demo-app
+      template:
+        metadata:
+          labels:
+            run: k8s-demo-app
+        spec:
+          containers:
+          - image: docker-internal.app.yst.ntnx.local/nutanix-static-demo-app:latest
+            imagePullPolicy: Always
+            name: nginxhttps
+            ports:
+            - containerPort: 443
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedIngress
+metadata:
+  name: k8s-demo-app-ingress
+  namespace: federated-app
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    spec:
+      rules:
+      - host: federated-app.karbon.yst.ntnx.local
+        http:
+          paths:
+          - backend:
+              serviceName: k8s-demo-app
+              servicePort: 8080
+            path: /

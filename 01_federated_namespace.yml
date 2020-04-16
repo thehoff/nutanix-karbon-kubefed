@@ -1,0 +1,14 @@
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedNamespace
+metadata:
+  name: federated-app
+  namespace: federated-app
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        app: federated-app
